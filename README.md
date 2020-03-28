@@ -5,7 +5,9 @@
 
 1. How to use:
     Type `make` to compile the binary and object files.
-    `./urlextend <application with flags> <webpage>
+    `./urlextend <application with flags> <webpage>`
 
 2. Purpose: Be able to run Linux shell commands on remote URLs
     These include `vim `, `wget`, `nano`, etc.
+
+
