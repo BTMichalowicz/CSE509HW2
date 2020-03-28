@@ -19,8 +19,8 @@ int main(int argc, char** argv){
     int i = 0;
     for(;i<5;i++){
         arg2[i]=NULL;
-    }char* arg3[3];
-    for(i=0; i<3;i++){
+    }char* arg3[argc];
+    for(i=0; i<argc;i++){
         arg3[i]=NULL;
     }
 
@@ -57,8 +57,16 @@ int main(int argc, char** argv){
             break;
         case 0:
             //char* arg3[2] = {"wc", filename};
-            arg3[0] = argv[1];
-            arg3[1] = filename;
+            for(i = 1; i<argc;i++){
+                if(strstr(argv[i], "http:")!=NULL){
+                    arg3[i-1]=filename;
+                    continue;
+                }
+                arg3[i-1] = argv[i];
+            }
+
+            //arg3[0] = argv[1];
+            //arg3[1] = filename;
             execvp(argv[1], arg3);
             FATAL("%s", strerror(errno));
             break;
