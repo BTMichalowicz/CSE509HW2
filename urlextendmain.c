@@ -32,7 +32,7 @@ int main(int argc, char** argv){
             break;
         case 0:
             /*We set up the child process of wget into an output hidden file*/
-            
+
             arg2[0]="wget";
             arg2[1]=argv[2];
             printf("%s\n", argv[2]);
@@ -74,12 +74,6 @@ int main(int argc, char** argv){
             while((waitpid(pid,0,0)!=-1));
             break;
     }
-
-    unlink(filename);
-
-
-    
-
 
     return 0;
 }
