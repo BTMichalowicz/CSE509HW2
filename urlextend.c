@@ -1,12 +1,10 @@
 #include"urlextend.h"
-
+#include<sys/user.h>
 
 int capture(int argc, char** argv){
     /*More of a ptrace-based approach??*/
 
-
-
-
+    /*char filename[11] = "urltemp.txt";*/
 
 
   return 0;
@@ -21,7 +19,7 @@ int bad_approach(int argc, char** argv){
       use "word count" to get the webpage
       Fork a few times and wait for the children processes to take care of things
       */
-    char filename[8] =".urltemp";
+    char filename[11] ="urltemp.txt";
 
     /*Sanity check for the number of arguments*/
     if(argc<=1){

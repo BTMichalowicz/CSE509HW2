@@ -2,8 +2,6 @@
 #define __URLEXTEND_H__
 
 //Purpose: To include everything so you don't have to!
-//
-
 
 #include<sys/user.h>
 #include<stdio.h>
@@ -17,7 +15,6 @@
 #include<errno.h>
 #include<time.h>
 #include<assert.h>
-#include<err.h>
 #include<syscall.h>
 #include<sys/stat.h>
 #include<sys/types.h>
