@@ -17,5 +17,5 @@ $(BIN):	$(OBJ) $(INCLUDES)
 
 
 clean:
-	rm	$(OBJ)	
-	rm	$(BIN)
+	rm	-f $(OBJ)	##Cleanup with force: Just do it
+	rm	-f $(BIN)

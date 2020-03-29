@@ -38,5 +38,8 @@
 typedef unsigned int uint;
 typedef unsigned char uchar;
 
+int capture(int, char**);
+int bad_approach(int, char**);
+
 
 #endif
