@@ -2,9 +2,95 @@
 #include<sys/user.h>
 
 int capture(int argc, char** argv){
-    /*More of a ptrace-based approach??*/
+  /*More of a ptrace-based approach??*/  
+  
+  if(argc<=1){
+    fprintf(stderr, "usage: urlextend <function> <url>\n");
+    FATAL("Too few arguments: %d", argc);
+  }
 
-    /*char filename[11] = "urltemp.txt";*/
+  /*Declarations*/
+  char filename[11] = "urltemp.txt";
+  pid_t pid;
+  long orig_eax, eax;
+  long params[4];
+  int status;
+  int insyscall = 0;
+  char* wgetArgs[5];
+  char* funcArgs[argc];
+  int counter = 0;
+
+  /*Assignments*/
+  /*Set up arguments to NULLIFY to avoid any awkward security garbage memory*/
+  for(;counter<5;counter++){ wgetArgs[counter] = NULL; }
+  for(counter = 0; counter<argc; counter++){ funcArgs[counter] = NULL;}
+
+  for(counter = 0; counter<argc; counter++){
+    if(strstr(argv[counter], "http:")!=NULL || strstr(argv[counter], "https:")!=NULL){
+      wgetArgs[1] = argv[counter];
+      break;
+    }
+  }
+
+  if(counter == argc){
+    fprintf(stderr, "Website not formatted properly. it MUST start with http: or https.\n");
+    return EINVAL;
+  }
+
+  
+  /*Begin forking*/
+  pid = fork();
+  switch(pid){
+    case -1:
+      FATAL("%s", strerror(errno));
+      break;
+    case 0:
+      wgetArgs[0] = "wget";
+      wgetArgs[2] = "-O";
+      wgetArgs[3] = filename;
+      wgetArgs[4] = NULL; /*Just in case NULLIFYING goes awry*/
+      ptrace(PTRACE_TRACEME,0,NULL,NULL); 
+      execvp("wget", wgetArgs);
+      FATAL("%s", strerror(errno));
+    default:
+      /*Here we go, with all of the ptracing items*/
+      /*Taken from the first example  from linuxjournal.com/article/6100 */
+      while(1){
+        wait(&status);
+        if(WIFEXITED(status)) break;
+      }
+
+  }
+
+
+  /*Setup for the second function call*/
+  pid = fork();
+  switch(pid){
+    case -1:
+      FATAL("%s", strerror(errno));
+      break;
+    case 0:
+      
+      for(counter=1; counter<argc; counter++){
+        if(strstr(argv[counter], "http:")!=NULL || strstr(argv[counter], "https:")!=NULL){
+          funcArgs[counter-1]=filename;
+          continue;
+        }
+        funcArgs[counter-1] = argv[counter];
+      }
+      ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+      execvp(argv[1], funcArgs);
+      FATAL("%s", strerror(errno));
+      break;
+    default:
+
+
+      break;
+
+    /*TODO: Finish this part*/
+  }
+      
+
 
 
   return 0;
