@@ -3,7 +3,6 @@
 
 //Purpose: To include everything so you don't have to!
 
-#include<sys/user.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<ctype.h>
@@ -22,6 +21,9 @@
 #include<string.h>
 #include<sys/mman.h>
 #include<sys/ptrace.h>
+#include<sys/syscall.h>
+#include<sys/user.h>
+#include<sys/reg.h>
 
 #define FATAL(...) \
     do{ \

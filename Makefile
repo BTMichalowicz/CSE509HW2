@@ -19,3 +19,4 @@ $(BIN):	$(OBJ) $(INCLUDES)
 clean:
 	rm	-f $(OBJ)	##Cleanup with force: Just do it
 	rm	-f $(BIN)
+	rm 	-f urltemp.txt ## Removing the temporary file for a cleanup
