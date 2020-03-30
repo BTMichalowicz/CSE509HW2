@@ -8,6 +8,8 @@
     `./urlextend <application with flags> <webpage>`
 
 2. Purpose: Be able to run Linux shell commands on remote URLs
-    These include `vim `, `wget`, `nano`, etc.
+    These include `less`, `wc`, `cat`, etc.
+
+3. TODO: Use Call interception from blog.netspi.com and samanbarghi.com, dlsym library
 
 

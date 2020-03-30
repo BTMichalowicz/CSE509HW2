@@ -49,54 +49,14 @@ int capture(int argc, char** argv){
       wgetArgs[2] = "-O";
       wgetArgs[3] = filename;
       wgetArgs[4] = NULL; /*Just in case NULLIFYING goes awry*/
-      ptrace(PTRACE_TRACEME,0,NULL,NULL); 
       execvp("wget", wgetArgs);
       FATAL("%s", strerror(errno));
     default:
       /*Here we go, with all of the ptracing items*/
-      /*Taken from the first example  from linuxjournal.com/article/6100 */
-      while(1){
-        wait(&status);
-        if(WIFEXITED(status)) break;
-
-        orig_eax = ptrace(PTRACE_PEEKUSER, pid, 4*ORIG_EAX, NULL);
-
-        if(orig_eax==SYS_write){
-          if(insyscall==0){
-            insyscall=1;
-            params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
-            params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
-            params[2] = ptrace(PTRACE_PEEKUSER, pid, 4*EDX, NULL);
-            params[3] = 0l;
-            printf("Write called with %ld, %ld, %ld\n", params[0], params[1], params[2]);
-          }else{
-            eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
-            printf("Write returned with %ld\n", eax);
-            insyscall=0;
-          }
-
-          ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
-        }else if(orig_eax==SYS_read){
-          if(insyscall==0){
-
-            insyscall=1;
-            params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
-            params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
-            params[2] = ptrace(PTRACE_PEEKUSER, pid, 4*EDX, NULL);
-            params[3] = 0l;
-            printf("Read called with %ld, %ld, %ld\n", params[0], params[1], params[2]);
-
-          }else{
-            eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
-            printf("Write returned with %ld\n", eax);
-            insyscall=0;
-          }
-
-
-          ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
-        }
-      }
-        //TODO: Setup for stat, open, open, read, mmap, munmap, etc     
+      /*Taken from the first example from linuxjournal.com/article/6100 */
+      while((waitpid(pid, &status, 0)!=-1)){} 
+      //ptrace(PTRACE_SYSCALL, pid, NULL, NULL); //placeholder
+      //TODO: Setup for stat, open, open, read, mmap, munmap, etc     
   }
 
 
@@ -114,17 +74,164 @@ int capture(int argc, char** argv){
         }
         funcArgs[counter-1] = argv[counter];
       }
-      ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+      ptrace(PTRACE_TRACEME, 0, NULL, NULL); //TODO: UNCOMMENT WHEN FINISHED
       execvp(argv[1], funcArgs);
       FATAL("%s", strerror(errno));
       break;
     default:
-      while(1){
+      while(/*waitpid(pid,0,0)!=-1*/1){
         wait(&status);
         if(WIFEXITED(status)) break;
-      }
+        //if(pid2>0) break;
 
-      break;
+        orig_eax = ptrace(PTRACE_PEEKUSER, pid, 4*ORIG_EAX, NULL);
+        switch(orig_eax){
+          case SYS_write:
+            if(insyscall==0){
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = ptrace(PTRACE_PEEKUSER, pid, 4*EDX, NULL);
+              params[3] = 0l;
+              printf("Write called with %ld, %ld, %ld\n", params[0], params[1], params[2]);
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("Write returned with %ld\n", eax);
+              insyscall=0;
+            }
+
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+
+            break;
+          case SYS_read:
+            if(insyscall==0){
+
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = ptrace(PTRACE_PEEKUSER, pid, 4*EDX, NULL);
+              params[3] = 0l;
+              printf("Read called with %ld, %ld, %ld\n", params[0], params[1], params[2]);
+
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("Read returned with %ld\n", eax);
+              insyscall=0;
+            }
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            break;
+          case SYS_access:
+            if(insyscall==0){
+
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = 0l;
+              printf("Access called with %ld, %ld\n", params[0], params[1]);
+
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("Access returned with %ld\n", eax);
+              insyscall=0;
+            }
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            break;
+          case SYS_open:
+            /*TODO: Consider both 2- and 3-arg variants?*/
+            if(insyscall==0){
+
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = 0l;
+              printf("Open called with %ld, %ld\n", params[0], params[1]);
+
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("Open returned with %ld\n", eax);
+              insyscall=0;
+            }
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+
+            break;
+          case SYS_mmap:
+            break;
+          case SYS_munmap:
+            break;
+          case SYS_socket: /*For making a connection*/
+            if(insyscall==0){
+
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = ptrace(PTRACE_PEEKUSER, pid, 4*EDX, NULL);
+              params[3] = 0l;
+              printf("Socket(2) called with %ld, %ld, %ld\n", params[0], params[1], params[2]);
+
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("Socket(2) returned with %ld\n", eax);
+              insyscall=0;
+            }
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            break;
+          case SYS_connect:
+
+            if(insyscall==0){
+
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = ptrace(PTRACE_PEEKUSER, pid, 4*EDX, NULL);
+              params[3] = 0l;
+              printf("Connect(2) called with %ld, %ld, %ld\n", params[0], params[1], params[2]);
+
+
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("Connect(2) returned with %ld\n", eax);
+              insyscall=0;
+            }
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            break;
+          case SYS_statfs64:
+            if(insyscall==0){
+
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = 0l;
+              printf("statfs/statfs64 called with %ld, %ld\n", params[0], params[1]);
+
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("statfs/statfs64 returned with %ld\n", eax);
+              insyscall=0;
+            }
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            break;
+
+          case SYS_fstatfs64:
+            if(insyscall==0){
+
+              insyscall=1;
+              params[0] = ptrace(PTRACE_PEEKUSER, pid, 4*EBX, NULL);
+              params[1] = ptrace(PTRACE_PEEKUSER, pid, 4*ECX, NULL);
+              params[2] = 0l;
+              printf("fstatfs64 called with %ld, %ld\n", params[0], params[1]);
+
+            }else{
+              eax = ptrace(PTRACE_PEEKUSER, pid, 4*EAX, NULL);
+              printf("ftatfs64 returned with %ld\n", eax);
+              insyscall=0;
+            }
+            ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+            break;
+
+        }
+        ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+
+      } 
 
       /*TODO: Finish this part*/
   }
